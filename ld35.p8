@@ -3,23 +3,30 @@ version 5
 __lua__
 local frames={10,12}
 local frame=nil
+local delay = nil
+local delaylength = 10
 
 
 function _init()
  frame = 1
+ delay = delaylength
+ music(0)
 end
 
 function _update()
- frame+=0.25
- if frame>#frames then 
-  frame = 1
+ delay -= 1
+ if delay == 0 then 
+  frame += 1
+  if (frame > #frames) frame = 1
+  delay = delaylength
  end
 end
 
 function _draw()
 	cls()
- spr(frames[flr(frame)],40,40,2,2)
+ spr(frames[frame],40,40,2,2)
 end
+
 __gfx__
 00000000000088800888800000008880000000000000000000000000888000000000000000000000000000008880000008880000888000000000000000000000
 00000000000880888800800000000088000000000002220000008800808808800000000000000000000088008088088080008008000800000000000000000000
