@@ -5,26 +5,49 @@ local frames={10,12}
 local frame=nil
 local delay = nil
 local delaylength = 10
+local mapoffset=nil
+local mapoffsetlimit = 32
+local tilesize = 8
+
+function player (x,y)
+ local self = {}
+ 
+ self.x = x
+ self.y = y
+ 
+ self.frame = 0
+ self.frames = {0}
+ 
+ return self
+end
 
 
 function _init()
  frame = 1
  delay = delaylength
+ mapoffset = 0
  music(0)
 end
 
 function _update()
+ --animate player
  delay -= 1
  if delay == 0 then 
   frame += 1
   if (frame > #frames) frame = 1
   delay = delaylength
  end
+ 
+ --move map
+ mapoffset += 1
+ if mapoffset >= mapoffsetlimit then
+  mapoffset = 0
+ end
 end
 
 function _draw()
 	cls()
- map(0,0,0,0,16,16)
+ map(0,0,0 - mapoffset,0,20,16)
  spr(frames[frame],40,40,2,2)
 end
 
