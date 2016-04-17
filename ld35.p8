@@ -27,12 +27,16 @@ water_blip_bounds = {
  cel_y_max=15
 }
 player_bounds = {
+ cel_x_min=1,
+ cel_x_max=13,
  cel_y_min=6,
  cel_y_max=8
 }
 player_s_bounds = {
- cel_y_min=0,
- cel_y_max=15
+ cel_x_min=1,
+ cel_x_max=13,
+ cel_y_min=1,
+ cel_y_max=13
 }
 sprite_sizes = {
  water_blip={w=1,h=1},
@@ -65,13 +69,13 @@ function player (x,y)
  self.x = x
  self.y = y
  
- self.moving = {x=0,y=0}
- 
  function self.update_settings ()
   if mode != "sea" then
  
    self.w = sprite_sizes.player.w
    self.h = sprite_sizes.player.h
+   
+   self.bounds = player_bounds
    
    self.frames = anim_frames.player
    self.anim_loop = anim_loop_table.player
@@ -85,6 +89,8 @@ function player (x,y)
    self.w = sprite_sizes.player_s.w
    self.h = sprite_sizes.player_s.h
    
+   self.bounds = player_s_bounds
+   
    self.frames = anim_frames.player_s
    self.anim_loop = anim_loop_table.player_s
    self.frame = 1
@@ -97,39 +103,32 @@ function player (x,y)
  end
  
  function self.handle_input ()
+  local x = self.x
   local y = self.y
-  if (btnp(keys.up) and
-     y-tilesize >= player_bounds.cel_y_min*tilesize)
+  if (btn(keys.left) and
+     x-4 >= self.bounds.cel_x_min*tilesize)
   then
-   self.moving.y = -tilesize
+   self.x -= 4
   end
-  if (btnp(keys.down) and
-     y+tilesize <= player_bounds.cel_y_max*tilesize)
+  if (btn(keys.right) and
+     x+1 <= self.bounds.cel_x_max*tilesize)
   then
-   self.moving.y = tilesize
+   self.x += 1
   end
- end
- 
- function self.move ()
-  local moving = self.moving
-  if moving.x == 0 and moving.y == 0 then
-   self.handle_input()
-  else
-   if moving.x != 0 then
-    local x_inc = moving.x/abs(moving.x)
-    self.x += x_inc
-    moving.x -= x_inc
-   end
-   if moving.y != 0 then
-    local y_inc = moving.y/abs(moving.y)
-    self.y += y_inc
-    moving.y -= y_inc
-   end
+  if (btn(keys.up) and
+     y-2 >= self.bounds.cel_y_min*tilesize)
+  then
+   self.y -= 2
+  end
+  if (btn(keys.down) and
+     y+2 <= self.bounds.cel_y_max*tilesize)
+  then
+   self.y += 2
   end
  end
  
  function self._update ()
-  self.move()
+  self.handle_input()
   if (self.anim_active) animate(self)
  end
  
