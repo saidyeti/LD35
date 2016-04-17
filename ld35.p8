@@ -10,8 +10,16 @@ maplength = 16
 sky_cel_height = 6
 beach_cel_height = 10
 tilesize = 8
-watermap_y_vals = {
- 11,12,13,14,15
+water_blip_spawn_probability = 0.09
+water_blip_bounds = {
+ cel_x_min=0,
+ cel_x_max=15,
+ cel_y_min=11,
+ cel_y_max=15
+}
+player_bounds = {
+ cel_y_min=7,
+ cel_y_max=9
 }
 sprite_sizes = {
  water_blip={w=1,h=1},
@@ -21,7 +29,7 @@ sprite_sizes = {
 anim_frames = {
  water_blip={
   77,93,94,95,93,77,
-  delay=5
+  delay=6
  },
  ball={
   85,84,69,68,67,66,65,64,
@@ -58,6 +66,38 @@ function player (x,y)
  
  self.flip_x = flip_table.player.flip_x
  self.flip_y = flip_table.player.flip_y
+ 
+ function self._update ()
+  if (self.anim_active) animate(self)
+ end
+ 
+ function self._draw ()
+  if (self.visible) draw_sprite(self)
+ end
+ 
+ return self
+end
+
+function water_blip ()
+ local self = {}
+ 
+ self.w = sprite_sizes.water_blip.w
+ self.h = sprite_sizes.water_blip.h
+ 
+ self.frames = anim_frames.water_blip
+ self.anim_loop = anim_loop_table.water_blip
+ 
+ self.flip_x = flip_table.water_blip.flip_x
+ self.flip_y = flip_table.water_blip.flip_y
+ 
+ function self.spawn (x,y)
+  self.x = x
+  self.y = y
+  self.frame = 1
+  self.anim_active = true
+  
+  self.visible = true
+ end
  
  function self._update ()
   if (self.anim_active) animate(self)
@@ -141,10 +181,7 @@ end
 
 -- variables
 t = nil
-water_blips = {
- false,false,false,false,false,
- false,false,false,false,false
-}
+water_blips = nil
 sky_offset = nil
 beach_offset = nil
 p = nil
@@ -154,6 +191,12 @@ function _init()
  sky_offset = 0
  beach_offset = 0
  p = player(1*tilesize,8*tilesize)
+ 
+ water_blips = {}
+ for x=1,15 do
+  add(water_blips,water_blip())
+ end
+ 
  music(0)
 end
 
@@ -172,7 +215,58 @@ function _update()
   beach_offset = 0
  end
  
+ -- update player
  p._update()
+ 
+ -- update blips
+ for blip in all(water_blips) do
+  blip._update()
+ end
+ 
+ -- collect blip info
+ local blip_coords = {}
+ local stale_blips = {}
+ for blip in all(water_blips) do
+  if blip.visible then
+   add(blip_coords,{
+    x=blip.x,
+    y=blip.y
+   })
+  else
+   add(stale_blips,blip)
+  end
+ end
+ 
+ -- spawn blips
+ local blip_p = water_blip_spawn_probability
+ local blip_xmin = water_blip_bounds.cel_x_min*tilesize
+ local blip_xmax = water_blip_bounds.cel_x_max*tilesize
+ local blip_ymin = water_blip_bounds.cel_y_min*tilesize
+ local blip_ymax = water_blip_bounds.cel_y_max*tilesize
+ local blip_size = sprite_sizes.water_blip.w*tilesize
+ for blip in all(stale_blips) do
+  local x = flr(rnd(blip_xmax-blip_xmin))+blip_xmin
+  local y = flr(rnd(blip_ymax-blip_ymin))+blip_ymin
+  if rnd(1) < blip_p then
+   
+   local ok = true
+   for c in all(blip_coords) do
+    local diff_x = x - c.x
+    local diff_y = y - c.y
+    if ((abs(diff_x) < blip_size*2) and
+       (abs(diff_y) < blip_size*2))
+    then
+     ok = false
+     break
+    end
+   end
+   if ok then
+    blip.spawn(x,y)
+    add(blip_coords,{x=x,y=y})
+   end
+   
+  end
+ end
 end
 
 function _draw()
@@ -180,6 +274,9 @@ function _draw()
  
  draw_map()
  p._draw()
+ for blip in all(water_blips) do
+  blip._draw()
+ end
 end
 
 __gfx__
