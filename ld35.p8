@@ -30,8 +30,8 @@ water_blip_bounds = {
  cel_y_max=15
 }
 land_obj_bounds = {
- cel_y_min=6,
- cel_y_max=8
+ cel_y_min=7,
+ cel_y_max=9
 }
 water_obj_bounds = {
  cel_x_min=2,
@@ -71,7 +71,35 @@ anim_frames = {
  },
  player={4,6,delay=6},
  player_s={0,2,delay=6},
- sun={10,12,delay=15}
+ sun={10,12,delay=15},
+ crab={46,62,delay=8},
+ castle1={80,delay=8},
+ castle2={81,delay=8},
+ umbrella1={82,delay=8},
+ umbrella2={83,delay=8},
+ pail={193,delay=8},
+ snail={192,delay=8},
+ hotdog={208,delay=8},
+ bird={210,211,delay=8},
+ beer={209,delay=8},
+ necklace={194,delay=8},
+ icecream={195,delay=8}
+}
+land_friends = {
+ "snail",
+ "hotdog",
+ "beer",
+ "bird",
+ "necklace",
+ "icecream"
+}
+land_foes = {
+ "crab",
+ "castle1",
+ "castle2",
+ "umbrella1",
+ "umbrella2",
+ "pail"
 }
 anim_loop_table = {
  water_blip=false,
@@ -200,22 +228,38 @@ function land_obj ()
   self.x = x
   self.y = y
   self.frame = 1
+  self.w = 1
+  self.h = 1
   self.anim_active = true
+  self.anim_loop = true
   
   self.visible = true
   
+  self.name = nil
+  
   if rnd(2) < 1 then
    self.type = "friend"
+   self.name = land_friends[flr(rnd(#land_friends))]
+   self.frames = anim_frames[self.name]
   else
    self.type = "foe"
+   self.name = land_foes[flr(rnd(#land_foes))]
+   self.frames = anim_frames[self.name]
   end
  end
  
  function self._update ()
-  if (self.anim_active) animate(self)
+  if (not self.frames) return
+  if (self.x and self.x <= -tilesize) or (self.y and self.y >= maplength*tilesize) then
+   self.visible = false
+   self.anim_active = false
+  elseif self.anim_active then
+   animate(self)
+  end
  end
  
  function self._draw ()
+  if (not self.frames) return
   if (self.visible) draw_sprite(self)
  end
  
@@ -385,6 +429,56 @@ function update_blips ()
  end
 end
 
+function update_land_objs ()
+ -- update objects
+ for obj in all(land_objs) do
+  obj._update()
+ end
+ 
+ -- move objects
+ for obj in all(land_objs) do
+  if(obj.x) obj.x -= 1/4*tilesize
+ end
+ 
+ -- collect object info
+ local stale_objs = {}
+ for obj in all(land_objs) do
+  if not obj.visible then
+   add(stale_objs,obj)
+  end
+ end
+ 
+ -- spawn objs
+ local p = water_blip_spawn_probability
+ local ymin = land_obj_bounds.cel_y_min*tilesize
+ local ymax = land_obj_bounds.cel_y_max*tilesize
+ local size = 8
+ local coords = {}
+ for obj in all(stale_objs) do
+  local x = maplength*tilesize
+  local y = flr(rnd(ymax-ymin))+ymin
+  if rnd(1) < p then
+   
+   local ok = true
+   for c in all(blip_coords) do
+    local diff_x = x - c.x
+    local diff_y = y - c.y
+    if ((abs(diff_x) < size*2) and
+       (abs(diff_y) < size*2))
+    then
+     ok = false
+     break
+    end
+   end
+   if ok then
+    obj.spawn(x,y)
+    add(coords,{x=x,y=y})
+   end
+   
+  end
+ end
+end
+
 -- variables
 t = nil
 water_blips = nil
@@ -405,6 +499,7 @@ function _update()
  if mode != "sea" then
   update_map()
   update_blips()
+  update_land_objs()
  end
 end
 
@@ -416,6 +511,9 @@ function _draw()
   rectfill(0,0,len,len,1)
  else
   draw_map()
+ end
+ for obj in all(land_objs) do
+  obj._draw()
  end
  p._draw()
  for blip in all(water_blips) do
