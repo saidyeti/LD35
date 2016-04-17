@@ -6,6 +6,14 @@ function ceil (x)
 end
 
 -- constants
+keys = {
+ left=0,
+ right=1,
+ up=2,
+ down=3,
+ a=4,
+ b=5
+}
 maplength = 16
 sky_cel_height = 6
 beach_cel_height = 10
@@ -13,13 +21,13 @@ tilesize = 8
 water_blip_spawn_probability = 0.15
 water_blip_bounds = {
  cel_x_min=0,
- cel_x_max=15,
+ cel_x_max=18,
  cel_y_min=11,
  cel_y_max=15
 }
 player_bounds = {
- cel_y_min=7,
- cel_y_max=9
+ cel_y_min=6,
+ cel_y_max=8
 }
 sprite_sizes = {
  water_blip={w=1,h=1},
@@ -57,6 +65,8 @@ function player (x,y)
  self.w = sprite_sizes.player.w
  self.h = sprite_sizes.player.h
  
+ self.moving = {x=0,y=0}
+ 
  self.frames = anim_frames.player
  self.anim_loop = anim_loop_table.player
  self.frame = 1
@@ -67,7 +77,40 @@ function player (x,y)
  self.flip_x = flip_table.player.flip_x
  self.flip_y = flip_table.player.flip_y
  
+ function self.handle_input ()
+  local y = self.y
+  if (btnp(keys.up) and
+     y-tilesize >= player_bounds.cel_y_min*tilesize)
+  then
+   self.moving.y = -tilesize
+  end
+  if (btnp(keys.down) and
+     y+tilesize <= player_bounds.cel_y_max*tilesize)
+  then
+   self.moving.y = tilesize
+  end
+ end
+ 
+ function self.move ()
+  local moving = self.moving
+  if moving.x == 0 and moving.y == 0 then
+   self.handle_input()
+  else
+   if moving.x != 0 then
+    local x_inc = moving.x/abs(moving.x)
+    self.x += x_inc
+    moving.x -= x_inc
+   end
+   if moving.y != 0 then
+    local y_inc = moving.y/abs(moving.y)
+    self.y += y_inc
+    moving.y -= y_inc
+   end
+  end
+ end
+ 
  function self._update ()
+  self.move()
   if (self.anim_active) animate(self)
  end
  
@@ -204,7 +247,7 @@ function _update()
  t += 1
  
  --move sky
- sky_offset += 1/8
+ sky_offset += 1/16
  if sky_offset >= maplength then
   sky_offset = 0
  end
