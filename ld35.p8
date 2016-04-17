@@ -19,12 +19,27 @@ sky_cel_height = 7
 house_cel_height = 2
 beach_cel_height = 9
 tilesize = 8
+fish_spawn_probability = 0.15
+water_obj_spawn_proability = 0.15
+land_obj_spawn_probability = 0.15
 water_blip_spawn_probability = 0.15
 water_blip_bounds = {
  cel_x_min=0,
  cel_x_max=15,
  cel_y_min=11,
  cel_y_max=15
+}
+land_obj_bounds = {
+ cel_y_min=6,
+ cel_y_max=8
+}
+water_obj_bounds = {
+ cel_x_min=2,
+ cel_x_max=17
+}
+fish_bounds = {
+ cel_y_min=1,
+ cel_x_max=14
 }
 player_bounds = {
  cel_x_min=1,
@@ -58,7 +73,6 @@ anim_frames = {
 }
 anim_loop_table = {
  water_blip=false,
- ball=true,
  player=true,
  player_s=true
 }
@@ -157,6 +171,41 @@ function water_blip ()
   self.anim_active = true
   
   self.visible = true
+ end
+ 
+ function self._update ()
+  if (self.anim_active) animate(self)
+ end
+ 
+ function self._draw ()
+  if (self.visible) draw_sprite(self)
+ end
+ 
+ return self
+end
+
+function land_obj ()
+ local self = {}
+ 
+ self.w = 1
+ self.h = 1
+ 
+ self.frames = anim_frames.water_blip
+ self.anim_loop = true
+ 
+ function self.spawn (x,y)
+  self.x = x
+  self.y = y
+  self.frame = 1
+  self.anim_active = true
+  
+  self.visible = true
+  
+  if rnd(2) < 1 then
+   self.type = "friend"
+  else
+   self.type = "foe"
+  end
  end
  
  function self._update ()
@@ -332,6 +381,7 @@ end
 -- variables
 t = nil
 water_blips = nil
+land_objs = nil
 sky_offset = nil
 house_offset = nil
 beach_offset = nil
@@ -376,6 +426,11 @@ function _init()
  water_blips = {}
  for x=1,15 do
   add(water_blips,water_blip())
+ end
+ 
+ land_objs = {}
+ for x=1,8 do
+  add(land_objs,land_obj())
  end
  
  music(0)
