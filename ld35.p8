@@ -71,7 +71,7 @@ anim_frames = {
  },
  player={4,6,delay=6},
  player_s={0,2,delay=6},
- sun={10,12,delay=15},
+ sun={10,12,14,delay=15},
  crab={46,62,delay=8},
  castle1={80,delay=8},
  castle2={81,delay=8},
