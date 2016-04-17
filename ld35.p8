@@ -10,7 +10,7 @@ maplength = 16
 sky_cel_height = 6
 beach_cel_height = 10
 tilesize = 8
-water_blip_spawn_probability = 0.09
+water_blip_spawn_probability = 0.15
 water_blip_bounds = {
  cel_x_min=0,
  cel_x_max=15,
@@ -221,6 +221,11 @@ function _update()
  -- update blips
  for blip in all(water_blips) do
   blip._update()
+ end
+ 
+ -- move blips
+ for blip in all(water_blips) do
+  if(blip.x) blip.x -= 1/4*tilesize
  end
  
  -- collect blip info
