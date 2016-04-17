@@ -1,8 +1,14 @@
 pico-8 cartridge // http://www.pico-8.com
 version 5
 __lua__
+function ceil (x)
+ return -flr(-x)
+end
+
 -- constants
 maplength = 16
+sky_cel_height = 6
+beach_cel_height = 10
 tilesize = 8
 watermap_y_vals = {
  11,12,13,14,15
@@ -21,7 +27,7 @@ anim_frames = {
   85,84,69,68,67,66,65,64,
   delay=5
  },
- player={4,6,delay=5}
+ player={4,6,delay=6}
 }
 anim_loop_table = {
  water_blip=false,
@@ -90,10 +96,47 @@ function draw_sprite (entity)
  spr(sprite,entity.x,entity.y,entity.w,entity.h,entity.flip_x,entity.flip_y)
 end
 
+function draw_map_section (
+ x_offset,
+ cel_width,
+ y_offset,
+ cel_height
+)
+ -- loop using offset
+ map(
+  flr(x_offset),
+  y_offset,
+  ceil(-tilesize*(x_offset%1)),
+  y_offset*tilesize,
+  cel_width-flr(x_offset),
+  cel_height
+ )
+ map(
+  0,
+  y_offset,
+  (cel_width*tilesize)-flr(x_offset*tilesize),
+  y_offset*tilesize,
+  x_offset*tilesize,
+  cel_height
+ )
+end
+
 function draw_map ()
- -- loop map using offset
- map(flr(mapoffset),0,-tilesize*(mapoffset%1),0,maplength-flr(mapoffset),maplength)
- map(0,0,(maplength*tilesize)-(mapoffset*tilesize),0,mapoffset*tilesize,maplength)
+ -- draw sky
+ draw_map_section(
+  sky_offset,
+  maplength,
+  0,
+  sky_cel_height
+ )
+ 
+ -- draw beach
+ draw_map_section(
+  beach_offset,
+  maplength,
+  sky_cel_height,
+  beach_cel_height
+ )
 end
 
 -- variables
@@ -102,12 +145,14 @@ water_blips = {
  false,false,false,false,false,
  false,false,false,false,false
 }
-mapoffset=nil
+sky_offset = nil
+beach_offset = nil
 p = nil
 
 function _init()
  t = 0
- mapoffset = 0
+ sky_offset = 0
+ beach_offset = 0
  p = player(1*tilesize,8*tilesize)
  music(0)
 end
@@ -115,10 +160,16 @@ end
 function _update()
  t += 1
  
- --move map
- mapoffset += 1/8
- if mapoffset >= maplength then
-  mapoffset = 0
+ --move sky
+ sky_offset += 1/8
+ if sky_offset >= maplength then
+  sky_offset = 0
+ end
+ 
+ --move beach
+ beach_offset += 1/4
+ if beach_offset >= maplength then
+  beach_offset = 0
  end
  
  p._update()
