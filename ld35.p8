@@ -50,12 +50,13 @@ anim_frames = {
   delay=5
  },
  player={4,6,delay=6},
- player_s={}
+ player_s={0,2,delay=6}
 }
 anim_loop_table = {
  water_blip=false,
  ball=true,
- player=true
+ player=true,
+ player_s=true
 }
 
 function player (x,y)
@@ -64,24 +65,35 @@ function player (x,y)
  self.x = x
  self.y = y
  
- self.w = sprite_sizes.player.w
- self.h = sprite_sizes.player.h
- 
  self.moving = {x=0,y=0}
  
- self.frames = anim_frames.player
- self.anim_loop = anim_loop_table.player
- self.frame = 1
- self.anim_active = true
- 
- self.visible = true
- 
  function self.update_settings ()
-  if mode == "sea" then
+  if mode != "sea" then
+ 
+   self.w = sprite_sizes.player.w
+   self.h = sprite_sizes.player.h
+   
+   self.frames = anim_frames.player
+   self.anim_loop = anim_loop_table.player
+   self.frame = 1
+   self.anim_active = true
+   
+   self.visible = true
    
   else
+ 
+   self.w = sprite_sizes.player_s.w
+   self.h = sprite_sizes.player_s.h
+   
+   self.frames = anim_frames.player_s
+   self.anim_loop = anim_loop_table.player_s
+   self.frame = 1
+   self.anim_active = true
+   
+   self.visible = true
    
   end
+  
  end
  
  function self.handle_input ()
@@ -124,6 +136,8 @@ function player (x,y)
  function self._draw ()
   if (self.visible) draw_sprite(self)
  end
+ 
+ self.update_settings()
  
  return self
 end
