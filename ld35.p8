@@ -23,6 +23,11 @@ anim_frames = {
  },
  player={4,6,delay=5}
 }
+anim_loop_table = {
+ water_blip=false,
+ ball=true,
+ player=true
+}
 flip_table = {
  water_blip={},
  ball={},
@@ -39,17 +44,21 @@ function player (x,y)
  self.h = sprite_sizes.player.h
  
  self.frames = anim_frames.player
+ self.anim_loop = anim_loop_table.player
  self.frame = 1
+ self.anim_active = true
+ 
+ self.visible = true
  
  self.flip_x = flip_table.player.flip_x
  self.flip_y = flip_table.player.flip_y
  
  function self._update ()
-  animate(self)
+  if (self.anim_active) animate(self)
  end
  
  function self._draw ()
-  draw_sprite(self)
+  if (self.visible) draw_sprite(self)
  end
  
  return self
@@ -60,7 +69,12 @@ function animate (entity)
  if t % frames.delay == 0 then
   entity.frame += 1
   if entity.frame > #frames then
-   entity.frame = 1
+   if entity.anim_loop then
+    entity.frame = 1
+   else
+    entity.anim_active = false
+    entity.visible = false
+   end
   end
  end
 end
