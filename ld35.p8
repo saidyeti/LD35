@@ -29,10 +29,15 @@ player_bounds = {
  cel_y_min=6,
  cel_y_max=8
 }
+player_s_bounds = {
+ cel_y_min=0,
+ cel_y_max=15
+}
 sprite_sizes = {
  water_blip={w=1,h=1},
  ball={w=1,h=1},
- player={w=2,h=2}
+ player={w=2,h=2},
+ player_s={w=2,h=2}
 }
 anim_frames = {
  water_blip={
@@ -43,7 +48,8 @@ anim_frames = {
   85,84,69,68,67,66,65,64,
   delay=5
  },
- player={4,6,delay=6}
+ player={4,6,delay=6},
+ player_s={}
 }
 anim_loop_table = {
  water_blip=false,
@@ -76,6 +82,14 @@ function player (x,y)
  
  self.flip_x = flip_table.player.flip_x
  self.flip_y = flip_table.player.flip_y
+ 
+ function self.update_settings ()
+  if mode == "sea" then
+   
+  else
+   
+  end
+ end
  
  function self.handle_input ()
   local y = self.y
@@ -222,30 +236,7 @@ function draw_map ()
  )
 end
 
--- variables
-t = nil
-water_blips = nil
-sky_offset = nil
-beach_offset = nil
-p = nil
-
-function _init()
- t = 0
- sky_offset = 0
- beach_offset = 0
- p = player(1*tilesize,8*tilesize)
- 
- water_blips = {}
- for x=1,15 do
-  add(water_blips,water_blip())
- end
- 
- music(0)
-end
-
-function _update()
- t += 1
- 
+function update_map ()
  --move sky
  sky_offset += 1/16
  if sky_offset >= maplength then
@@ -257,10 +248,9 @@ function _update()
  if beach_offset >= maplength then
   beach_offset = 0
  end
- 
- -- update player
- p._update()
- 
+end
+
+function update_blips ()
  -- update blips
  for blip in all(water_blips) do
   blip._update()
@@ -317,14 +307,54 @@ function _update()
  end
 end
 
+-- variables
+t = nil
+water_blips = nil
+sky_offset = nil
+beach_offset = nil
+mode = nil
+p = nil
+
+function _update()
+ t += 1
+ 
+ -- update player
+ p._update()
+ 
+ if mode != "sea" then
+  update_map()
+  update_blips()
+ end
+end
+
 function _draw()
  cls()
  
- draw_map()
+ local len = maplength*tilesize
+ if mode == "sea" then
+  rectfill(0,0,len,len,1)
+ else
+  draw_map()
+ end
  p._draw()
  for blip in all(water_blips) do
   blip._draw()
  end
+end
+
+function _init()
+ t = 0
+ sky_offset = 0
+ beach_offset = 0
+ mode = "sea"
+ p = player(1*tilesize,7*tilesize)
+ 
+ water_blips = {}
+ for x=1,15 do
+  add(water_blips,water_blip())
+ end
+ 
+ music(0)
 end
 
 __gfx__
