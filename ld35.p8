@@ -239,11 +239,11 @@ function land_obj ()
   
   if rnd(2) < 1 then
    self.type = "friend"
-   self.name = land_friends[flr(rnd(#land_friends))]
+   self.name = land_friends[flr(rnd(#land_friends))+1]
    self.frames = anim_frames[self.name]
   else
    self.type = "foe"
-   self.name = land_foes[flr(rnd(#land_foes))]
+   self.name = land_foes[flr(rnd(#land_foes))+1]
    self.frames = anim_frames[self.name]
   end
  end
@@ -251,8 +251,7 @@ function land_obj ()
  function self._update ()
   if (not self.frames) return
   if (self.x and self.x <= -tilesize) or (self.y and self.y >= maplength*tilesize) then
-   self.visible = false
-   self.anim_active = false
+   self.frames = nil
   elseif self.anim_active then
    animate(self)
   end
@@ -449,7 +448,7 @@ function update_land_objs ()
  end
  
  -- spawn objs
- local p = water_blip_spawn_probability
+ local p = land_obj_spawn_probability
  local ymin = land_obj_bounds.cel_y_min*tilesize
  local ymax = land_obj_bounds.cel_y_max*tilesize
  local size = 8
@@ -460,7 +459,7 @@ function update_land_objs ()
   if rnd(1) < p then
    
    local ok = true
-   for c in all(blip_coords) do
+   for c in all(coords) do
     local diff_x = x - c.x
     local diff_y = y - c.y
     if ((abs(diff_x) < size*2) and
