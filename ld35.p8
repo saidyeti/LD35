@@ -251,6 +251,8 @@ function land_obj ()
  function self._update ()
   if (not self.frames) return
   if (self.x and self.x <= -tilesize) or (self.y and self.y >= maplength*tilesize) then
+   self.visible = false
+   self.anim_active = false
    self.frames = nil
   elseif self.anim_active then
    animate(self)
@@ -441,8 +443,14 @@ function update_land_objs ()
  
  -- collect object info
  local stale_objs = {}
+ local coords = {}
  for obj in all(land_objs) do
-  if not obj.visible then
+  if obj.visible then
+   add(coords,{
+    x=obj.x,
+    y=obj.y
+   })
+  else
    add(stale_objs,obj)
   end
  end
@@ -452,7 +460,6 @@ function update_land_objs ()
  local ymin = land_obj_bounds.cel_y_min*tilesize
  local ymax = land_obj_bounds.cel_y_max*tilesize
  local size = 8
- local coords = {}
  for obj in all(stale_objs) do
   local x = maplength*tilesize
   local y = flr(rnd(ymax-ymin))+ymin
