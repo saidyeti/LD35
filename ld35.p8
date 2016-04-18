@@ -485,6 +485,22 @@ function update_land_objs ()
  end
 end
 
+function draw_land_entities ()
+ -- account for reduced hit box
+ local p_y = p.y + tilesize
+ for obj in all(land_objs) do
+  if obj.y and obj.y <= p_y then
+   obj._draw()
+  end
+ end
+ p._draw()
+ for obj in all(land_objs) do
+  if obj.y and obj.y > p_y then
+   obj._draw()
+  end
+ end
+end
+
 -- variables
 t = nil
 water_blips = nil
@@ -517,13 +533,10 @@ function _draw()
   rectfill(0,0,len,len,1)
  else
   draw_map()
- end
- for obj in all(land_objs) do
-  obj._draw()
- end
- p._draw()
- for blip in all(water_blips) do
-  blip._draw()
+  draw_land_entities()
+  for blip in all(water_blips) do
+   blip._draw()
+  end
  end
 end
 
