@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 5
+version 7
 __lua__
 function ceil (x)
  return -flr(-x)
@@ -21,7 +21,7 @@ beach_cel_height = 9
 tilesize = 8
 fish_spawn_probability = 0.15
 water_obj_spawn_proability = 0.15
-land_obj_spawn_probability = 0.15
+land_obj_spawn_probability = 0.1
 water_blip_spawn_probability = 0.15
 water_blip_bounds = {
  cel_x_min=0,
@@ -107,12 +107,15 @@ anim_loop_table = {
  player_s=true,
  sun=true
 }
+meter_break = 7
+meter_limit = 10
 
 function player (x,y)
  local self = {}
  
  self.x = x
  self.y = y
+ self.hit_timer = 0
  
  function self.update_settings ()
   if mode != "sea" then
@@ -172,12 +175,43 @@ function player (x,y)
   end
  end
  
+ function self.hit ()
+  self.hit_timer = 90
+ end
+ 
+ function self.check_collisions ()
+  for obj in all(land_objs) do
+   if obj.x and obj.y and obj.frames then
+    local cx1 = self.x + tilesize*1.5
+    local cy1 = self.y + tilesize/2
+    local cx2 = obj.x + tilesize/2
+    local cy2 = obj.y + tilesize/2
+    if block_collide(cx1,cy1,cx2,cy2) then
+     if obj.type == "friend" then
+      obj.disable()
+      meterval += 1
+     elseif self.hit_timer == 0 then
+      self.hit()
+      meterval -= 1
+     end
+    end
+   end
+  end
+ end
+ 
  function self._update ()
   self.handle_input()
+  self.check_collisions()
+  if self.hit_timer > 0 then
+   self.hit_timer -= 1
+  end
   if (self.anim_active) animate(self)
  end
  
  function self._draw ()
+  if self.hit_timer > 0 then
+   if (self.frame%2 == 0) return
+  end
   if (self.visible) draw_sprite(self)
  end
  
@@ -248,12 +282,16 @@ function land_obj ()
   end
  end
  
+ function self.disable ()
+  self.visible = false
+  self.anim_active = false
+  self.frames = nil
+ end
+ 
  function self._update ()
   if (not self.frames) return
   if (self.x and self.x <= -tilesize) or (self.y and self.y >= maplength*tilesize) then
-   self.visible = false
-   self.anim_active = false
-   self.frames = nil
+   self.disable()
   elseif self.anim_active then
    animate(self)
   end
@@ -265,6 +303,15 @@ function land_obj ()
  end
  
  return self
+end
+
+-- only works for 1x1 tile blocks
+function block_collide (cx1,cy1,cx2,cy2)
+ local diff_x = cx1 - cx2
+ local diff_y = cy1 - cy2
+ 
+ return ((abs(diff_x) < tilesize) and
+       (abs(diff_y) < tilesize))
 end
 
 function animate (entity)
@@ -457,20 +504,20 @@ function update_land_objs ()
  
  -- spawn objs
  local p = land_obj_spawn_probability
- local ymin = land_obj_bounds.cel_y_min*tilesize
- local ymax = land_obj_bounds.cel_y_max*tilesize
+ local ymin = land_obj_bounds.cel_y_min
+ local ymax = land_obj_bounds.cel_y_max
  local size = 8
  for obj in all(stale_objs) do
   local x = maplength*tilesize
-  local y = flr(rnd(ymax-ymin))+ymin
+  local y = (flr(rnd(ymax-ymin))+ymin)*tilesize
   if rnd(1) < p then
    
    local ok = true
    for c in all(coords) do
     local diff_x = x - c.x
     local diff_y = y - c.y
-    if ((abs(diff_x) < size*2) and
-       (abs(diff_y) < size*2))
+    if ((abs(diff_x) < size*2.3) and
+       (abs(diff_y) < size*2.3))
     then
      ok = false
      break
@@ -511,6 +558,7 @@ beach_offset = nil
 mode = nil
 p = nil
 sun = nil
+meterval = nil
 
 function _update()
  t += 1
@@ -557,6 +605,7 @@ function _init()
   w=sprite_sizes.sun.w,
   h=sprite_sizes.sun.h
  }
+ meterval = 3
  
  water_blips = {}
  for x=1,15 do
@@ -564,7 +613,7 @@ function _init()
  end
  
  land_objs = {}
- for x=1,8 do
+ for x=1,5 do
   add(land_objs,land_obj())
  end
  
