@@ -1,6 +1,11 @@
 pico-8 cartridge // http://www.pico-8.com
 version 7
 __lua__
+function print_text (txt,x,y)
+ print(txt,x-1,y+1,5)
+ print(txt,x,y,7)
+end
+
 function ceil (x)
  return -flr(-x)
 end
@@ -176,7 +181,7 @@ function player (x,y)
  end
  
  function self.hit ()
-  self.hit_timer = 90
+  self.hit_timer = 30
  end
  
  function self.check_collisions ()
@@ -586,6 +591,8 @@ function _draw()
    blip._draw()
   end
  end
+ 
+ print_text(meterval,maplength*tilesize-tilesize*3,tilesize)
 end
 
 function _init()
